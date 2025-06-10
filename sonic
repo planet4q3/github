@@ -1,3 +1,8 @@
+getgenv().settings = {
+	["character"] = {
+		("Blaz3Rogu32007")
+	},
+}
 
 local notif = loadstring(game:HttpGet("https://raw.githubusercontent.com/IceMinisterq/Notification-Library/Main/Library.lua"))()
 -- Lighting Configuration
@@ -89,12 +94,6 @@ local uis = game:GetService("UserInputService")
 local rs = game:GetService("RunService")
 local plrs = game:GetService("Players")
 local localPlr = plrs.LocalPlayer
-getgenv().settings = {
-	["character"] = {
-		("LoganAquaBlock")
-	},
-}
-
 
 -- Character selection and transformation
 local args = {
@@ -111,16 +110,13 @@ game:GetService("ReplicatedStorage").Characters.Sonic.Remotes.SonicBoom:FireServ
 uis.InputBegan:Connect(function(input)
 	if input.UserInputType == Enum.UserInputType.MouseButton1 then
 		for i = 1, 9 do
-			local target = plrs:FindFirstChild(localPlr)
-			if target then
-				local args = {target}
+				local args = {character}
 				game:GetService("ReplicatedStorage").Characters.Invincible.Remotes.HeavyPunch:FireServer(unpack(args))
 				game:GetService("ReplicatedStorage").Characters.Quicksilver.Remotes.TimeStop:FireServer(unpack(args))
 				game:GetService("ReplicatedStorage").Characters.Sonic.Remotes.SonicBoom:FireServer()
 			end
 		end
-	end
-end)
+	end)
 
 
 uis.InputBegan:Connect(function(input)
