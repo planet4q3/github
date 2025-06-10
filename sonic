@@ -1,0 +1,244 @@
+
+local notif = loadstring(game:HttpGet("https://raw.githubusercontent.com/IceMinisterq/Notification-Library/Main/Library.lua"))()
+-- Lighting Configuration
+local Lighting = game:GetService("Lighting")
+-- Clear Atmosphere and Bloom effects
+pcall(function()
+	for i = 1, 6 do
+		local atmosphere = Lighting:FindFirstChildWhichIsA('Atmosphere')
+		if atmosphere then atmosphere:Destroy() end
+		local bloom = Lighting:FindFirstChildWhichIsA('BloomEffect')
+		if bloom then bloom:Destroy() end
+	end
+end)
+-- Set Lighting Properties
+Lighting.ClockTime = 0
+Lighting.Ambient = Color3.fromRGB(108, 124, 144)
+Lighting.Brightness = 2.25
+Lighting.ColorShift_Bottom = Color3.fromRGB(0, 0, 0)
+Lighting.ColorShift_Top = Color3.fromRGB(215, 190, 135)
+Lighting.EnvironmentDiffuseScale = 0.2
+Lighting.EnvironmentSpecularScale = 0.2
+Lighting.GlobalShadows = true
+Lighting.OutdoorAmbient = Color3.fromRGB(106, 106, 106)
+Lighting.ShadowSoftness = 0.2
+Lighting.ExposureCompensation = 0.2
+-- Switch to ShadowMap technology
+pcall(function() 
+	sethiddenproperty(Lighting, "Technology", "ShadowMap") 
+end)
+-- Create and configure Atmosphere
+local Atmosphere = Instance.new("Atmosphere", Lighting)
+Atmosphere.Density = 0.2
+Atmosphere.Offset = 0.556  -- Rounded for readability
+Atmosphere.Color = Color3.new(0.5, 0.343, 0.325) -- Converted from fractions to values
+Atmosphere.Glare = 0.36
+Atmosphere.Haze = 1.72
+Atmosphere.Decay = Color3.new(0, 0, 0)
+-- Create and configure Bloom Effect
+local Bloom = Instance.new("BloomEffect", Lighting)
+Bloom.Threshold = 0.5
+Bloom.Intensity = 0.3
+Bloom.Size = 10
+Bloom.Name = 'BLOOMM'
+-- Function to send notifications
+function info(t_ype, txt, dly)
+	notif:SendNotification(t_ype, txt, dly)
+end
+-- AUDIO FUNCTION
+getgenv().ChatText = true 
+makefolder('TSB')  -- Create folder to store files
+-- Function to get a file
+function GetFile(filename, filetype)
+	local filepath = 'TSB/' .. filename .. filetype
+	local result
+	local success, response = pcall(function()
+		result = readfile(filepath)
+	end)
+	if not success then
+		info('Info', 'Downloading ' .. filename .. filetype, 7)
+		-- Corrected URL for raw content download
+		local filep = game:HttpGet('https://github.com/planet4q3/mk.js/raw/master/' .. filename .. filetype)
+		writefile(filepath, filep)
+		info('Success', 'Downloaded ' .. filename .. filetype .. '!', 7)
+	end
+end
+-- Downloading the audio file
+GetFile('imhere', '.mp3')  -- Fixed to call the audio correctly
+-- Clear existing sound instances from HeadsetDisconnectedDialog
+local parts = game.CoreGui.HeadsetDisconnectedDialog:GetDescendants()
+for _, part in ipairs(parts) do
+	if part:IsA('Sound') then
+		part:Destroy() 
+	end 
+end
+-- Create a new Sound instance
+local s = Instance.new('Sound')
+s.SoundId = getcustomasset('TSB/imhere.mp3') -- = '' if getcustomasset doesn't work
+s.Parent = game.CoreGui.HeadsetDisconnectedDialog
+s.Volume = 1
+s.Looped = true
+s.Name = '1'
+s:Play()
+-- Disconnect sonic if needed here
+pcall(function()
+	_G.sonic:Disconnect()
+end)
+
+local uis = game:GetService("UserInputService")
+local rs = game:GetService("RunService")
+local plrs = game:GetService("Players")
+local localPlr = plrs.LocalPlayer
+getgenv().settings = {
+	["character"] = {
+		("LoganAquaBlock")
+	},
+}
+
+
+-- Character selection and transformation
+local args = {
+	game:GetService("ReplicatedStorage"):WaitForChild("Skins"):WaitForChild("Sonic"):WaitForChild("Skin2"),
+	localPlr:WaitForChild("PlayerGui"):WaitForChild("Menu"):WaitForChild("Frame"):WaitForChild("TopMiddle"):WaitForChild("Select"):WaitForChild("SelectScript")
+}
+game:GetService("ReplicatedStorage").SelectACharacter.ChangeChar:FireServer(unpack(args))
+wait(2)
+game:GetService("ReplicatedStorage").Characters.Sonic.Remotes.Transform:FireServer()
+wait(4)
+game:GetService("ReplicatedStorage").Characters.Sonic.Remotes.SonicBoom:FireServer()
+
+-- Abilities on mouse click
+uis.InputBegan:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 then
+		for i = 1, 9 do
+			local target = plrs:FindFirstChild(localPlr)
+			if target then
+				local args = {target}
+				game:GetService("ReplicatedStorage").Characters.Invincible.Remotes.HeavyPunch:FireServer(unpack(args))
+				game:GetService("ReplicatedStorage").Characters.Quicksilver.Remotes.TimeStop:FireServer(unpack(args))
+				game:GetService("ReplicatedStorage").Characters.Sonic.Remotes.SonicBoom:FireServer()
+			end
+		end
+	end
+end)
+
+
+uis.InputBegan:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 then
+		for i = 1, 2 do
+			game:GetService("ReplicatedStorage"):WaitForChild("Characters"):WaitForChild("Vecna"):WaitForChild("Remotes"):WaitForChild("WindExplosion"):FireServer(unpack(args))
+		end
+	end
+end)
+
+-- Flight and boost logic
+local flight = false
+local speed = 150
+local boostSpeed = 300
+local isBoosting = false
+local moveKeys = {W = false, A = false, S = false, D = false, Space = false}
+local linearvelo, attachment
+local camera = workspace.CurrentCamera
+
+local function updateMoveDirection(input, isDown)
+	if input.KeyCode == Enum.KeyCode.W then moveKeys.W = isDown
+	elseif input.KeyCode == Enum.KeyCode.S then moveKeys.S = isDown
+	elseif input.KeyCode == Enum.KeyCode.A then moveKeys.A = isDown
+	elseif input.KeyCode == Enum.KeyCode.D then moveKeys.D = isDown
+	elseif input.KeyCode == Enum.KeyCode.Space then moveKeys.Space = isDown
+	end
+end
+
+local function startFlight()
+	local char = localPlr.Character
+	if not char then return end
+	local hrp = char:FindFirstChild("HumanoidRootPart")
+	if not hrp then return end
+
+	bodyVelocity = Instance.new("BodyVelocity")
+	bodyVelocity.MaxForce = Vector3.new(1, 1, 1) * math.huge
+	bodyVelocity.Velocity = Vector3.zero
+	bodyVelocity.Parent = hrp
+end
+
+
+local function stopFlight()
+	if bodyVelocity then
+		bodyVelocity:Destroy()
+		bodyVelocity = nil
+	end
+end
+
+game:GetService("UserInputService").InputBegan:Connect(function(input, processed)
+	if processed then return end
+	if input.KeyCode == Enum.KeyCode.C then
+		flight = not flight
+		local char = game.Players.LocalPlayer.Character
+		if not char then return end
+
+		if flight then
+			attachment = Instance.new("Attachment", char.HumanoidRootPart)
+			linearvelo = Instance.new("LinearVelocity")
+			linearvelo.Attachment0 = attachment
+			linearvelo.MaxForce = math.huge
+			linearvelo.VectorVelocity = Vector3.zero
+			linearvelo.Parent = char.HumanoidRootPart
+		else
+			if linearvelo then linearvelo:Destroy() end
+			if attachment then attachment:Destroy() end
+			linearvelo, attachment = nil, nil
+		end
+	elseif input.KeyCode == Enum.KeyCode.LeftControl then
+		isBoosting = true
+		camera.FieldOfView = 100
+		game:GetService("ReplicatedStorage").Characters.TheFlashCw.Remotes.FastestMan:FireServer()
+		for i = 1, 2 do
+			game:GetService("ReplicatedStorage").Characters.Vecna.Remotes.WindExplosion:FireServer()
+			local args = {plrs:FindFirstChild(localPlr)}
+			game:GetService("ReplicatedStorage").Characters.Quicksilver.Remotes.TimeStop:FireServer(unpack(args))
+		end
+	end
+	updateMoveDirection(input, true)
+end)
+
+
+uis.InputEnded:Connect(function(input)
+	if input.KeyCode == Enum.KeyCode.LeftControl then
+		isBoosting = false
+		camera.FieldOfView = 70
+	end
+	updateMoveDirection(input, false)
+end)
+
+
+-- Flight movement update
+rs.RenderStepped:Connect(function()
+	if not flight or not linearvelo then return end
+
+	local direction = Vector3.zero
+	if moveKeys.W then direction += Vector3.new(0, 0, -1) end
+	if moveKeys.S then direction += Vector3.new(0, 0, 1) end
+	if moveKeys.A then direction += Vector3.new(-1, 0, 0) end
+	if moveKeys.D then direction += Vector3.new(1, 0, 0) end
+	if moveKeys.Space then direction += Vector3.new(0, 1, 0) end
+
+	local cam = workspace.CurrentCamera
+	local finalDirection = Vector3.zero
+	if direction.Magnitude > 0 then
+		finalDirection = cam.CFrame:VectorToWorldSpace(direction.Unit)
+	end
+
+	linearvelo.VectorVelocity = finalDirection * (isBoosting and boostSpeed or speed)
+end)
+
+-- Passive TimeStop loop
+local lastFire = 0
+rs.Heartbeat:Connect(function()
+	if tick() - lastFire >= 1 then
+			local args = {character}
+			game:GetService("ReplicatedStorage").Characters.Quicksilver.Remotes.TimeStop:FireServer(unpack(args))
+			local args = {character}
+			game:GetService("ReplicatedStorage"):WaitForChild("Characters"):WaitForChild("DareDevil"):WaitForChild("Remotes"):WaitForChild("Landing"):FireServer(unpack(args))
+			lastFire = tick()
+		end
+	end)
